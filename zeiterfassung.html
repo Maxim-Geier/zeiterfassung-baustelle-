@@ -1,4 +1,20 @@
 <!DOCTYPE html>
+<!--
+===============================================================
+  Zeiterfassung Baustelle - QR-Ausweis-System
+
+  (C) 2026 Maxim Geier. Alle Rechte vorbehalten.
+
+  Dieses Programm und sein Quelltext sind urheberrechtlich
+  geschuetzt. Vervielfaeltigung, Weitergabe, Veroeffentlichung
+  oder Bearbeitung - ganz oder in Teilen - sind ohne vorherige
+  schriftliche Zustimmung des Urhebers nicht gestattet.
+
+  Die Nutzung ist ausschliesslich den vom Urheber
+  autorisierten Personen und Stellen erlaubt.
+===============================================================
+-->
+
 <html lang="de">
 <head>
 <meta charset="utf-8">
@@ -77,6 +93,12 @@
   #flash .verb{font-size:clamp(46px,15vw,86px);font-weight:800;letter-spacing:-.02em;line-height:1}
   #flash .who{font-size:clamp(22px,6vw,32px);font-weight:600;margin-top:14px}
   #flash .meta{font-size:20px;opacity:.85;margin-top:6px;font-variant-numeric:tabular-nums}
+  #flash .helm{
+    margin-top:20px;padding:10px 26px;border:3px solid rgba(255,255,255,.85);
+    border-radius:14px;font-size:clamp(30px,9vw,52px);font-weight:800;
+    letter-spacing:.02em;font-variant-numeric:tabular-nums;
+  }
+  #flash .helm small{display:block;font-size:14px;font-weight:600;letter-spacing:.08em;opacity:.8}
   #flash.kommen{background:var(--go)}
   #flash.gehen{background:#1D4E8A}
   #flash.fehler{background:var(--stop)}
@@ -135,31 +157,6 @@
     border-radius:11px;padding:13px 15px;font-size:15px;margin:12px 0}
 
   /* ---- Karten drucken ---- */
-  #cards{display:none}
-  @media print{
-    @page{size:A4;margin:0}
-    body{background:#fff;color:#000;padding:0;font-size:12pt}
-    header,nav,section,.noprint{display:none!important}
-    #cards{
-      display:grid!important;grid-template-columns:1fr 1fr;
-      gap:5mm;padding:8mm;
-    }
-    .qcard{
-      border:1.2pt solid #000;border-radius:3mm;padding:4mm;
-      display:flex;gap:4mm;align-items:flex-start;
-      height:55mm;overflow:hidden;break-inside:avoid;page-break-inside:avoid;
-    }
-    .qcard .qr{flex:0 0 30mm;width:30mm;line-height:0}
-    .qcard .qr img,.qcard .qr canvas{width:30mm!important;height:30mm!important;display:block}
-    .qcard .txt{flex:1;min-width:0;overflow-wrap:anywhere}
-    .qcard .hd{font-size:8pt;font-weight:700;border-bottom:.8pt solid #000;
-      padding-bottom:1.2mm;margin-bottom:2mm;line-height:1.2}
-    .qcard .t1{font-size:12pt;font-weight:700;line-height:1.18}
-    .qcard .t2{font-size:11pt;font-family:monospace;font-weight:700;margin-top:1.5mm}
-    .qcard .t3{font-size:8.5pt;color:#333;margin-top:1.5mm;line-height:1.2}
-    .qcard .sch{font-size:8.5pt;font-weight:600;margin-top:1mm}
-    .qcard .t4{font-size:6.5pt;color:#666;margin-top:2mm;line-height:1.25}
-  }
 </style>
 </head>
 <body>
@@ -206,11 +203,13 @@
 <!-- ============ LEUTE ============ -->
 <section id="v-staff">
   <h2>Neuen Mitarbeiter anlegen</h2>
+  <p class="note" style="margin-top:0">Nur für Nachträge. Für den Ausweis wird zusätzlich eine gedruckte Karte mit passendem QR-Code benötigt.</p>
   <div class="stack">
     <div class="grid2">
       <input id="nId" class="mono" placeholder="ID, z. B. AMAKO-001" autocomplete="off" spellcheck="false">
       <input id="nFirma" placeholder="Firma / NU" autocomplete="off">
     </div>
+    <input id="nHelm" class="mono" placeholder="Helmnummer (leer = wie ID)" autocomplete="off">
     <input id="nName" placeholder="Nachname Vorname" autocomplete="off">
     <select id="nSchicht">
       <option>1. Schicht</option><option>2. Schicht</option><option>3. Schicht</option>
@@ -221,10 +220,9 @@
   <h2>Angelegt</h2>
   <div id="staffList"></div>
   <div class="row">
-    <button class="act" id="btnPrint">Ausweise drucken</button>
     <button class="act" id="btnBackup">Daten sichern</button>
   </div>
-  <p class="note">Beim Drucken bekommt jeder Mitarbeiter eine Karte mit seinem QR-Code – zwei nebeneinander auf A4. Am besten laminieren oder in eine Ausweishülle stecken.</p>
+  <p class="note">Die Ausweise werden nicht hier erzeugt. Neue Mitarbeiter meldest du zur Kartenerstellung, die fertige Liste spielst du unter Export als Sicherung ein.</p>
 </section>
 
 <!-- ============ EXPORT ============ -->
@@ -250,16 +248,20 @@
   </div>
   <input type="file" id="fileIn" accept="application/json" hidden>
   <div class="row"><button class="act danger" id="btnWipe">Alle Buchungen löschen</button></div>
+
+  <p class="note" id="lizenzzeile" style="margin-top:26px">
+    Zeiterfassung Baustelle · © 2026 Maxim Geier. Alle Rechte vorbehalten.
+    Weitergabe oder Bearbeitung nur mit schriftlicher Zustimmung.
+  </p>
 </section>
 
 </div>
-
-<div id="cards"></div>
 
 <div id="flash" role="status" aria-live="assertive">
   <div class="verb" id="fVerb"></div>
   <div class="who" id="fWho"></div>
   <div class="meta" id="fMeta"></div>
+  <div class="helm" id="fHelm" hidden></div>
 </div>
 
 <nav>
@@ -271,8 +273,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>if(typeof jsQR==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"><\/scr'+'ipt>');}</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>if(typeof QRCode==='undefined'){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/scr'+'ipt>');}</script>
 <script>
 /* ---------------------------------------------------------
    Speicher: nutzt window.storage falls vorhanden,
@@ -323,6 +323,7 @@ document.querySelectorAll('nav button').forEach(b=>{
 
 /* ---------------- Buchen ---------------- */
 function findStaff(id){ return staff.find(s=>s.id.toUpperCase()===id.toUpperCase()); }
+function helmNr(p, id){ return (p && p.helm) ? p.helm : id; }
 
 function book(rawId){
   const id = String(rawId).trim().toUpperCase();
@@ -335,24 +336,28 @@ function book(rawId){
     open.gehen = now.toISOString();
     saveEntries();
     const mins = Math.round((now - new Date(open.kommen))/60000);
-    flash('gehen','Gehen', person?person.name:id, pad(Math.floor(mins/60))+':'+pad(mins%60)+' h auf der Baustelle');
+    flash('gehen','Gehen', person?person.name:id,
+          pad(Math.floor(mins/60))+':'+pad(mins%60)+' h auf der Baustelle', helmNr(person,id));
   }else{
     entries.push({eid:'e'+Date.now()+Math.random().toString(16).slice(2,6),
                   id, date:dayKey(now), kommen:now.toISOString(), gehen:null});
     saveEntries();
     flash('kommen','Kommen', person?person.name:id,
-          person? (person.firma||'') : 'Achtung: ID nicht angelegt');
+          person? (person.firma||'') : 'Achtung: ID nicht angelegt', helmNr(person,id));
   }
   renderAll();
 }
 
 let flashT;
-function flash(kind, verb, who, meta){
+function flash(kind, verb, who, meta, helm){
   const f = $('#flash');
   f.className = 'on '+kind;
   $('#fVerb').textContent = verb;
   $('#fWho').textContent  = who;
   $('#fMeta').textContent = meta || '';
+  const fh = $('#fHelm');
+  if(helm){ fh.innerHTML = '<small>HELM</small>' + esc(helm); fh.hidden = false; }
+  else { fh.hidden = true; }
   beep(kind==='fehler'?200:660);
   if(navigator.vibrate) navigator.vibrate(kind==='fehler'?[90,70,90]:70);
   clearTimeout(flashT);
@@ -472,7 +477,7 @@ function renderToday(){
       <span class="dot"></span>
       <div class="body">
         <div class="nm">${esc(p?p.name:r.id)}</div>
-        <div class="sub mono">${esc(r.id)}${p&&p.firma?' · '+esc(p.firma):''}</div>
+        <div class="sub mono">Helm ${esc(helmNr(p,r.id))}${p&&p.firma?' · '+esc(p.firma):''}</div>
       </div>
       <div class="tm">
         <b>${hhmm(r.kommen)}${r.gehen?' – '+hhmm(r.gehen):''}</b>
@@ -489,7 +494,7 @@ function renderStaff(){
     `<div class="card">
       <div class="body">
         <div class="nm">${esc(s.name)}</div>
-        <div class="sub mono">${esc(s.id)}${s.firma?' · '+esc(s.firma):''}${s.schicht?' · '+esc(s.schicht):''}</div>
+        <div class="sub mono">Helm ${esc(s.helm||s.id)} · ID ${esc(s.id)}${s.firma?' · '+esc(s.firma):''}${s.schicht?' · '+esc(s.schicht):''}</div>
       </div>
       <button class="act danger" style="flex:0 0 auto;padding:9px 13px;font-size:15px" onclick="delStaff('${esc(s.id)}')">Löschen</button>
     </div>`).join('');
@@ -504,9 +509,10 @@ $('#btnAdd').onclick = ()=>{
   const name = $('#nName').value.trim();
   if(!id || !name){ alert('ID und Name werden beide gebraucht.'); return; }
   if(findStaff(id)){ alert('Die ID '+id+' ist schon vergeben.'); return; }
-  staff.push({id, name, firma:$('#nFirma').value.trim(), schicht:$('#nSchicht').value});
+  staff.push({id, name, firma:$('#nFirma').value.trim(), schicht:$('#nSchicht').value,
+              helm:($('#nHelm').value.trim() || id)});
   saveStaff();
-  $('#nId').value=''; $('#nName').value=''; $('#nFirma').value='';
+  $('#nId').value=''; $('#nName').value=''; $('#nFirma').value=''; $('#nHelm').value='';
   renderStaff();
 };
 
@@ -520,7 +526,7 @@ function renderOpen(){
     return `<div class="card">
       <div class="body">
         <div class="nm">${esc(p?p.name:r.id)}</div>
-        <div class="sub">${deDate(r.date)}, Kommen ${hhmm(r.kommen)} – kein Gehen erfasst</div>
+        <div class="sub">Helm ${esc(helmNr(p,r.id))} · ${deDate(r.date)}, Kommen ${hhmm(r.kommen)} – kein Gehen erfasst</div>
       </div>
       <button class="act" style="flex:0 0 auto;padding:9px 13px;font-size:15px" onclick="fixEntry('${r.eid}')">Zeit nachtragen</button>
     </div>`;
@@ -545,7 +551,7 @@ $('#btnCsv').onclick = ()=>{
                       .sort((a,b)=> a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
   if(!rows.length){ alert('Für diesen Zeitraum gibt es keine Buchungen.'); return; }
 
-  const head = ['Datum','Mitarbeiter-ID','Name','Firma','Schicht','Kommen','Gehen','Dauer (h:mm)','Dauer (Std. dezimal)','Bemerkung'];
+  const head = ['Datum','Helm-Nr.','Mitarbeiter-ID','Name','Firma','Schicht','Kommen','Gehen','Dauer (h:mm)','Dauer (Std. dezimal)','Bemerkung'];
   const lines = [head.join(';')];
   rows.forEach(r=>{
     const p = findStaff(r.id);
@@ -556,7 +562,7 @@ $('#btnCsv').onclick = ()=>{
       dez = (mins/60).toFixed(2).replace('.',',');
     }else{ bem = 'Gehen fehlt'; }
     if(!p) bem = (bem?bem+'; ':'')+'ID nicht in Mitarbeiterliste';
-    lines.push([deDate(r.date), r.id, p?p.name:'', p?p.firma:'', p?(p.schicht||''):'',
+    lines.push([deDate(r.date), helmNr(p,r.id), r.id, p?p.name:'', p?p.firma:'', p?(p.schicht||''):'',
                 hhmm(r.kommen), r.gehen?hhmm(r.gehen):'', hm, dez, bem].map(csvEsc).join(';'));
   });
   dl('\uFEFF'+lines.join('\r\n'), 'Zeiterfassung_'+from+'_bis_'+to+'.csv', 'text/csv;charset=utf-8');
@@ -593,28 +599,6 @@ $('#btnWipe').onclick = ()=>{
   if(!confirm('Alle Buchungen löschen? Vorher eine Sicherung speichern.')) return;
   if(!confirm('Wirklich? Das lässt sich nicht rückgängig machen.')) return;
   entries=[]; saveEntries(); renderAll();
-};
-
-/* ---------------- Ausweise drucken ---------------- */
-$('#btnPrint').onclick = ()=>{
-  if(!staff.length){ alert('Erst Mitarbeiter anlegen.'); return; }
-  const box = $('#cards'); box.innerHTML='';
-  staff.slice().sort((a,b)=>a.id.localeCompare(b.id)).forEach(s=>{
-    const d = document.createElement('div');
-    d.className='qcard';
-    d.innerHTML = `<div class="qr"></div><div class="txt">
-        <div class="hd">Baustellenausweis EAF Halle</div>
-        <div class="t1">${esc(s.name)}</div>
-        <div class="t2">Nr. ${esc(s.id)}</div>
-        <div class="t3">${esc(s.firma||'')}</div>
-        <div class="sch">${esc(s.schicht||'1. Schicht')}</div>
-        <div class="t4">QR-Code zum Ein- und Ausstempeln.<br>Enthält nur die Mitarbeiter-Nummer.</div>
-      </div>`;
-    box.appendChild(d);
-    if(typeof QRCode!=='undefined')
-      new QRCode(d.querySelector('.qr'), {text:s.id, width:240, height:240, correctLevel:QRCode.CorrectLevel.M});
-  });
-  setTimeout(()=>window.print(), 600);
 };
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>

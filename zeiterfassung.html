@@ -143,10 +143,12 @@
     .qcard{border:1.5pt solid #000;border-radius:3mm;padding:5mm;
       display:flex;gap:5mm;align-items:center;break-inside:avoid;height:45mm}
     .qcard .qr img,.qcard .qr canvas{width:32mm;height:32mm}
+    .qcard .hd{font-size:8.5pt;font-weight:700;letter-spacing:.3pt;border-bottom:.8pt solid #000;padding-bottom:1mm;margin-bottom:2mm}
     .qcard .t1{font-size:13pt;font-weight:700}
     .qcard .t2{font-size:10pt;font-family:monospace;margin-top:1mm}
     .qcard .t3{font-size:9pt;color:#444;margin-top:1mm}
     .qcard .t4{font-size:7.5pt;color:#666;margin-top:3mm}
+    .qcard .sch{font-size:9.5pt;font-weight:600;margin-top:1.5mm}
   }
 </style>
 </head>
@@ -166,6 +168,8 @@
     <div id="reticle" hidden></div>
     <p class="hint" id="camHint">Kamera ist aus. Auf „Kamera starten“ tippen und den QR-Code der Karte vor die Kamera halten.</p>
   </div>
+
+  <p id="scanStatus" class="note" style="margin-top:10px">Wird geprüft …</p>
 
   <div class="row">
     <button class="act primary" id="btnCam">Kamera starten</button>
@@ -197,7 +201,10 @@
       <input id="nId" class="mono" placeholder="ID, z. B. AMAKO-001" autocomplete="off" spellcheck="false">
       <input id="nFirma" placeholder="Firma / NU" autocomplete="off">
     </div>
-    <input id="nName" placeholder="Vor- und Nachname" autocomplete="off">
+    <input id="nName" placeholder="Nachname Vorname" autocomplete="off">
+    <select id="nSchicht">
+      <option>1. Schicht</option><option>2. Schicht</option><option>3. Schicht</option>
+    </select>
     <button class="act primary" id="btnAdd">Mitarbeiter speichern</button>
   </div>
 
@@ -252,8 +259,10 @@
   <button data-v="export">Export</button>
 </nav>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>if(typeof jsQR==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"><\/scr'+'ipt>');}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>if(typeof QRCode==='undefined'){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/scr'+'ipt>');}</script>
 <script>
 /* ---------------------------------------------------------
    Speicher: nutzt window.storage falls vorhanden,
@@ -354,7 +363,25 @@ $('#btnManual').onclick = ()=>{ book($('#manualId').value); $('#manualId').value
 $('#manualId').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnManual').click(); });
 
 /* ---------------- Kamera / QR ---------------- */
-let stream=null, raf=null, lastCode='', lastAt=0, track=null;
+let stream=null, raf=null, lastCode='', lastAt=0, track=null, detector=null, busy=false;
+
+// Viele Handys können QR-Codes selbst lesen. Das ist schneller und braucht keine Bibliothek.
+(async ()=>{
+  const st = $('#scanStatus');
+  try{
+    if('BarcodeDetector' in window){
+      const f = await BarcodeDetector.getSupportedFormats();
+      if(f.includes('qr_code')){
+        detector = new BarcodeDetector({formats:['qr_code']});
+        st.textContent = 'Scanner bereit (Erkennung vom Handy).';
+        return;
+      }
+    }
+  }catch(e){}
+  st.textContent = (typeof jsQR!=='undefined')
+    ? 'Scanner bereit.'
+    : 'Der Scanner konnte nicht geladen werden. Prüfe die Internetverbindung und lade die Seite neu. Solange kannst du die Nummer unten eintippen.';
+})();
 const video = $('#video'), canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d', {willReadFrequently:true});
 
@@ -386,19 +413,31 @@ $('#btnTorch').onclick = async ()=>{
        $('#btnTorch').textContent = on ? 'Licht aus' : 'Licht an'; }catch(e){}
 };
 
-function tick(){
-  if(video.readyState === video.HAVE_ENOUGH_DATA){
-    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    const img = ctx.getImageData(0,0,canvas.width,canvas.height);
-    const code = (typeof jsQR!=='undefined') ? jsQR(img.data, img.width, img.height) : null;
-    if(code && code.data){
-      const now = Date.now();
-      // gleicher Code zählt erst nach 4 Sekunden wieder – verhindert Doppelbuchung
-      if(code.data !== lastCode || now - lastAt > 4000){
-        lastCode = code.data; lastAt = now;
-        book(code.data);
-      }
+function gotCode(text){
+  if(!text) return;
+  const now = Date.now();
+  // gleicher Code zählt erst nach 4 Sekunden wieder – verhindert Doppelbuchung
+  if(text !== lastCode || now - lastAt > 4000){
+    lastCode = text; lastAt = now;
+    book(text);
+  }
+}
+
+async function tick(){
+  if(video.readyState === video.HAVE_ENOUGH_DATA && !busy){
+    if(detector){
+      busy = true;
+      try{
+        const hits = await detector.detect(video);
+        if(hits && hits.length) gotCode(hits[0].rawValue);
+      }catch(e){}
+      busy = false;
+    }else if(typeof jsQR !== 'undefined'){
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+      let code = jsQR(img.data, img.width, img.height, {inversionAttempts:'attemptBoth'});
+      if(code && code.data) gotCode(code.data);
     }
   }
   raf = requestAnimationFrame(tick);
@@ -440,7 +479,7 @@ function renderStaff(){
     `<div class="card">
       <div class="body">
         <div class="nm">${esc(s.name)}</div>
-        <div class="sub mono">${esc(s.id)}${s.firma?' · '+esc(s.firma):''}</div>
+        <div class="sub mono">${esc(s.id)}${s.firma?' · '+esc(s.firma):''}${s.schicht?' · '+esc(s.schicht):''}</div>
       </div>
       <button class="act danger" style="flex:0 0 auto;padding:9px 13px;font-size:15px" onclick="delStaff('${esc(s.id)}')">Löschen</button>
     </div>`).join('');
@@ -455,7 +494,7 @@ $('#btnAdd').onclick = ()=>{
   const name = $('#nName').value.trim();
   if(!id || !name){ alert('ID und Name werden beide gebraucht.'); return; }
   if(findStaff(id)){ alert('Die ID '+id+' ist schon vergeben.'); return; }
-  staff.push({id, name, firma:$('#nFirma').value.trim()});
+  staff.push({id, name, firma:$('#nFirma').value.trim(), schicht:$('#nSchicht').value});
   saveStaff();
   $('#nId').value=''; $('#nName').value=''; $('#nFirma').value='';
   renderStaff();
@@ -496,7 +535,7 @@ $('#btnCsv').onclick = ()=>{
                       .sort((a,b)=> a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
   if(!rows.length){ alert('Für diesen Zeitraum gibt es keine Buchungen.'); return; }
 
-  const head = ['Datum','Mitarbeiter-ID','Name','Firma','Kommen','Gehen','Dauer (h:mm)','Dauer (Std. dezimal)','Bemerkung'];
+  const head = ['Datum','Mitarbeiter-ID','Name','Firma','Schicht','Kommen','Gehen','Dauer (h:mm)','Dauer (Std. dezimal)','Bemerkung'];
   const lines = [head.join(';')];
   rows.forEach(r=>{
     const p = findStaff(r.id);
@@ -507,7 +546,7 @@ $('#btnCsv').onclick = ()=>{
       dez = (mins/60).toFixed(2).replace('.',',');
     }else{ bem = 'Gehen fehlt'; }
     if(!p) bem = (bem?bem+'; ':'')+'ID nicht in Mitarbeiterliste';
-    lines.push([deDate(r.date), r.id, p?p.name:'', p?p.firma:'',
+    lines.push([deDate(r.date), r.id, p?p.name:'', p?p.firma:'', p?(p.schicht||''):'',
                 hhmm(r.kommen), r.gehen?hhmm(r.gehen):'', hm, dez, bem].map(csvEsc).join(';'));
   });
   dl('\uFEFF'+lines.join('\r\n'), 'Zeiterfassung_'+from+'_bis_'+to+'.csv', 'text/csv;charset=utf-8');
@@ -553,11 +592,13 @@ $('#btnPrint').onclick = ()=>{
   staff.slice().sort((a,b)=>a.id.localeCompare(b.id)).forEach(s=>{
     const d = document.createElement('div');
     d.className='qcard';
-    d.innerHTML = `<div class="qr"></div><div>
+    d.innerHTML = `<div class="qr"></div><div style="flex:1">
+        <div class="hd">Baustellenausweis EAF Halle</div>
         <div class="t1">${esc(s.name)}</div>
-        <div class="t2">${esc(s.id)}</div>
+        <div class="t2">Nr. ${esc(s.id)}</div>
         <div class="t3">${esc(s.firma||'')}</div>
-        <div class="t4">QR-Code zum Ein- und Ausstempeln.<br>Enthält nur die Mitarbeiter-ID.</div>
+        <div class="sch">${esc(s.schicht||'1. Schicht')}</div>
+        <div class="t4">QR-Code zum Ein- und Ausstempeln.<br>Enthält nur die Mitarbeiter-Nummer.</div>
       </div>`;
     box.appendChild(d);
     if(typeof QRCode!=='undefined')

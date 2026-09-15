@@ -9,12 +9,8 @@
   geschuetzt. Vervielfaeltigung, Weitergabe, Veroeffentlichung
   oder Bearbeitung - ganz oder in Teilen - sind ohne vorherige
   schriftliche Zustimmung des Urhebers nicht gestattet.
-
-  Die Nutzung ist ausschliesslich den vom Urheber
-  autorisierten Personen und Stellen erlaubt.
 ===============================================================
 -->
-
 <html lang="de">
 <head>
 <meta charset="utf-8">
@@ -23,159 +19,121 @@
 <title>Zeiterfassung Baustelle</title>
 <style>
   :root{
-    --ink:#16181A;
-    --panel:#232830;
-    --panel-2:#2C333C;
-    --line:#3D454F;
-    --paper:#EDEFF1;
-    --mute:#96A0AB;
-    --signal:#FFD200;
-    --go:#20A45C;
-    --stop:#D2342B;
-    --warn:#E08A1E;
+    --ink:#16181A; --panel:#232830; --panel-2:#2C333C; --line:#3D454F;
+    --paper:#EDEFF1; --mute:#96A0AB; --signal:#FFD200;
+    --go:#20A45C; --stop:#D2342B; --blau:#1D4E8A;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
-  body{
-    background:var(--ink);
-    color:var(--paper);
+  body{background:var(--ink);color:var(--paper);
     font-family:"Inter","Segoe UI",Roboto,system-ui,sans-serif;
-    font-size:17px;
-    line-height:1.45;
-    padding-bottom:96px;
-  }
+    font-size:17px;line-height:1.45;padding-bottom:96px}
   .wrap{max-width:760px;margin:0 auto;padding:0 16px}
 
-  header{
-    display:flex;align-items:baseline;gap:12px;
-    padding:18px 16px 14px;max-width:760px;margin:0 auto;
-    border-bottom:1px solid var(--line);
-  }
+  header{display:flex;align-items:baseline;gap:10px;padding:18px 16px 14px;
+    max-width:760px;margin:0 auto;border-bottom:1px solid var(--line)}
   header h1{font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em}
-  header .site{color:var(--mute);font-size:14px;margin-left:auto}
+  header .rolle{margin-left:auto;font-size:13px;font-weight:700;
+    padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+  header .rolle.kommen{color:#7FE0AC;border-color:#2C6B4A}
+  header .rolle.gehen{color:#9CC4F0;border-color:#2B4E75}
 
-  nav{
-    position:fixed;bottom:0;left:0;right:0;z-index:40;
-    display:flex;background:var(--panel);border-top:1px solid var(--line);
-    padding-bottom:env(safe-area-inset-bottom);
-  }
-  nav button{
-    flex:1;background:none;border:0;color:var(--mute);
-    font:inherit;font-size:14px;font-weight:600;
-    padding:14px 4px 16px;cursor:pointer;
-    border-top:3px solid transparent;margin-top:-1px;
-  }
+  nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
+    background:var(--panel);border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1;background:none;border:0;color:var(--mute);font:inherit;
+    font-size:13.5px;font-weight:600;padding:14px 2px 16px;cursor:pointer;
+    border-top:3px solid transparent;margin-top:-1px}
   nav button[aria-current="true"]{color:var(--signal);border-top-color:var(--signal)}
 
   section{display:none;padding-top:18px}
   section.on{display:block}
-
   h2{font-size:15px;font-weight:600;color:var(--mute);margin:26px 0 10px}
   h2:first-child{margin-top:8px}
 
-  /* ---- Scanner ---- */
-  #cam{
-    position:relative;background:#000;border-radius:14px;overflow:hidden;
-    aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
-  }
+  #cam{position:relative;background:#000;border-radius:14px;overflow:hidden;
+    aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
   #cam video{width:100%;height:100%;object-fit:cover}
-  #cam .hint{position:absolute;color:var(--mute);font-size:15px;text-align:center;padding:24px;max-width:340px}
-  #reticle{
-    position:absolute;width:62%;aspect-ratio:1;border:3px solid var(--signal);
-    border-radius:10px;opacity:.85;pointer-events:none;
-  }
-  #flash{
-    position:fixed;inset:0;z-index:60;display:none;
-    flex-direction:column;align-items:center;justify-content:center;
-    padding:24px;text-align:center;color:#fff;
-  }
+  #cam .hint{position:absolute;color:var(--mute);font-size:15px;text-align:center;
+    padding:24px;max-width:340px}
+  #reticle{position:absolute;width:62%;aspect-ratio:1;border:3px solid var(--signal);
+    border-radius:10px;opacity:.85;pointer-events:none}
+
+  #flash{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;
+    align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff}
   #flash.on{display:flex}
   #flash .verb{font-size:clamp(46px,15vw,86px);font-weight:800;letter-spacing:-.02em;line-height:1}
-  #flash .who{font-size:clamp(22px,6vw,32px);font-weight:600;margin-top:14px}
-  #flash .meta{font-size:20px;opacity:.85;margin-top:6px;font-variant-numeric:tabular-nums}
-  #flash .helm{
-    margin-top:20px;padding:10px 26px;border:3px solid rgba(255,255,255,.85);
-    border-radius:14px;font-size:clamp(30px,9vw,52px);font-weight:800;
-    letter-spacing:.02em;font-variant-numeric:tabular-nums;
-  }
-  #flash .helm small{display:block;font-size:14px;font-weight:600;letter-spacing:.08em;opacity:.8}
+  #flash .who{font-size:clamp(20px,5.5vw,30px);font-weight:600;margin-top:12px}
+  #flash .meta{font-size:19px;opacity:.85;margin-top:6px;font-variant-numeric:tabular-nums}
+  #flash .nr{margin-top:18px;padding:9px 24px;border:3px solid rgba(255,255,255,.85);
+    border-radius:14px;font-size:clamp(28px,8.5vw,48px);font-weight:800;
+    font-variant-numeric:tabular-nums}
+  #flash .nr small{display:block;font-size:13px;font-weight:600;letter-spacing:.08em;opacity:.8}
   #flash.kommen{background:var(--go)}
-  #flash.gehen{background:#1D4E8A}
+  #flash.gehen{background:var(--blau)}
   #flash.fehler{background:var(--stop)}
+  #flash.warn{background:#B5720F}
 
   .row{display:flex;gap:10px;margin-top:12px}
-  button.act{
-    flex:1;background:var(--panel-2);color:var(--paper);
-    border:1px solid var(--line);border-radius:11px;
-    font:inherit;font-weight:600;padding:15px 12px;cursor:pointer;
-  }
+  button.act{flex:1;background:var(--panel-2);color:var(--paper);border:1px solid var(--line);
+    border-radius:11px;font:inherit;font-weight:600;padding:15px 12px;cursor:pointer}
   button.act:hover{background:#353D48}
   button.primary{background:var(--signal);color:#16181A;border-color:var(--signal)}
-  button.primary:hover{background:#FFDE3D}
   button.danger{color:#F2A6A1;border-color:#5B2C2A}
   button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
 
-  input,select{
-    width:100%;background:var(--panel);color:var(--paper);
-    border:1px solid var(--line);border-radius:11px;
-    font:inherit;padding:14px;
-  }
+  input,select{width:100%;background:var(--panel);color:var(--paper);
+    border:1px solid var(--line);border-radius:11px;font:inherit;padding:14px}
   input::placeholder{color:#6E7883}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .stack{display:flex;flex-direction:column;gap:10px}
   .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  label.lb{display:block;font-size:14px;color:var(--mute);margin-bottom:4px}
 
-  /* ---- Listen ---- */
-  .card{
-    background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;padding:14px 15px;margin-bottom:9px;
-    display:flex;align-items:center;gap:13px;
-  }
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;margin-bottom:9px;display:flex;align-items:center;gap:13px}
   .card .dot{width:11px;height:11px;border-radius:50%;flex:none;background:var(--mute)}
   .card.on-site{border-left:4px solid var(--go);padding-left:12px}
   .card.on-site .dot{background:var(--go)}
+  .card.luecke{border-left:4px solid var(--stop);padding-left:12px}
+  .card.luecke .dot{background:var(--stop)}
   .card .body{flex:1;min-width:0}
   .card .nm{font-weight:600}
   .card .sub{font-size:14px;color:var(--mute);font-variant-numeric:tabular-nums}
   .card .tm{text-align:right;font-variant-numeric:tabular-nums;font-size:15px;flex:none}
   .card .tm b{display:block;font-size:17px}
   .empty{color:var(--mute);padding:26px 4px;text-align:center;font-size:15px}
-  .count{
-    display:flex;gap:20px;background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;padding:15px 17px;margin-bottom:16px;
-  }
+  .count{display:flex;gap:16px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:15px 17px;margin-bottom:16px}
   .count div{flex:1}
-  .count b{display:block;font-size:32px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
-  .count span{font-size:13px;color:var(--mute)}
+  .count b{display:block;font-size:30px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+  .count span{font-size:12.5px;color:var(--mute)}
   .count .now b{color:var(--signal)}
 
-  .note{
-    font-size:14px;color:var(--mute);border-left:3px solid var(--line);
-    padding:2px 0 2px 13px;margin:14px 0;
-  }
+  .note{font-size:14px;color:var(--mute);border-left:3px solid var(--line);
+    padding:2px 0 2px 13px;margin:14px 0}
   .warnbox{background:#3A2E12;border:1px solid #6B5518;color:#F6DFA6;
     border-radius:11px;padding:13px 15px;font-size:15px;margin:12px 0}
-
-  /* ---- Karten drucken ---- */
+  .okbox{background:#12301F;border:1px solid #2C6B4A;color:#BFE8D0;
+    border-radius:11px;padding:13px 15px;font-size:15px;margin:12px 0}
 </style>
 </head>
 <body>
 
 <header>
   <h1>Zeiterfassung</h1>
-  <span class="site" id="siteName">Baustelle</span>
+  <span class="rolle" id="rolleAnzeige">—</span>
 </header>
 
 <div class="wrap">
 
-<!-- ============ SCANNEN ============ -->
+<!-- ================= SCANNEN ================= -->
 <section id="v-scan" class="on">
   <div id="cam">
     <video id="video" playsinline muted></video>
     <div id="reticle" hidden></div>
-    <p class="hint" id="camHint">Kamera ist aus. Auf „Kamera starten“ tippen und den QR-Code der Karte vor die Kamera halten.</p>
+    <p class="hint" id="camHint">Kamera ist aus. Auf „Kamera starten“ tippen und den Ausweis vor die Kamera halten.</p>
   </div>
-
   <p id="scanStatus" class="note" style="margin-top:10px">Wird geprüft …</p>
 
   <div class="row">
@@ -185,71 +143,125 @@
 
   <h2>Ohne Kamera erfassen</h2>
   <div class="row">
-    <input id="manualId" class="mono" placeholder="AMAKO-001" autocomplete="off" spellcheck="false">
+    <input id="manualId" class="mono" placeholder="Nummer, z. B. 042" autocomplete="off" spellcheck="false">
     <button class="act" id="btnManual" style="flex:0 0 34%">Buchen</button>
   </div>
-  <p class="note">Ein Scan bucht abwechselnd Kommen und Gehen. Wer schon auf der Baustelle ist, wird beim nächsten Scan ausgebucht.</p>
+  <p class="note" id="modusHinweis"></p>
 </section>
 
-<!-- ============ HEUTE ============ -->
+<!-- ================= HEUTE ================= -->
 <section id="v-today">
   <div class="count">
-    <div class="now"><b id="cNow">0</b><span>gerade auf der Baustelle</span></div>
-    <div><b id="cDay">0</b><span>heute gebucht</span></div>
+    <div class="now"><b id="cNow">0</b><span>auf der Baustelle</span></div>
+    <div><b id="cKommen">0</b><span>Kommen</span></div>
+    <div><b id="cGehen">0</b><span>Gehen</span></div>
+  </div>
+  <div class="row" style="margin-bottom:14px">
+    <input type="date" id="tagWahl">
   </div>
   <div id="todayList"></div>
 </section>
 
-<!-- ============ LEUTE ============ -->
+<!-- ================= LEUTE ================= -->
 <section id="v-staff">
   <h2>Neuen Mitarbeiter anlegen</h2>
   <p class="note" style="margin-top:0">Nur für Nachträge. Für den Ausweis wird zusätzlich eine gedruckte Karte mit passendem QR-Code benötigt.</p>
   <div class="stack">
     <div class="grid2">
-      <input id="nId" class="mono" placeholder="ID, z. B. AMAKO-001" autocomplete="off" spellcheck="false">
-      <input id="nFirma" placeholder="Firma / NU" autocomplete="off">
+      <input id="nId" class="mono" placeholder="Nr., z. B. 137" autocomplete="off">
+      <input id="nHelm" class="mono" placeholder="Helm-Nr." autocomplete="off">
     </div>
-    <input id="nHelm" class="mono" placeholder="Helmnummer (leer = wie ID)" autocomplete="off">
-    <input id="nName" placeholder="Nachname Vorname" autocomplete="off">
-    <select id="nSchicht">
-      <option>1. Schicht</option><option>2. Schicht</option><option>3. Schicht</option>
-    </select>
+    <input id="nName" placeholder="Name" autocomplete="off">
+    <div class="grid2">
+      <input id="nFirma" placeholder="Firma / NU" autocomplete="off">
+      <select id="nSchicht"><option>1. Schicht</option><option>2. Schicht</option><option>3. Schicht</option></select>
+    </div>
     <button class="act primary" id="btnAdd">Mitarbeiter speichern</button>
   </div>
-
-  <h2>Angelegt</h2>
-  <div id="staffList"></div>
-  <div class="row">
-    <button class="act" id="btnBackup">Daten sichern</button>
+  <h2>Angelegt (<span id="staffCount">0</span>)</h2>
+  <div class="row" style="margin-bottom:10px">
+    <input id="suche" placeholder="Suchen nach Name, Nr. oder Firma" autocomplete="off">
   </div>
-  <p class="note">Die Ausweise werden nicht hier erzeugt. Neue Mitarbeiter meldest du zur Kartenerstellung, die fertige Liste spielst du unter Export als Sicherung ein.</p>
+  <div id="staffList"></div>
 </section>
 
-<!-- ============ EXPORT ============ -->
+<!-- ================= GERÄT ================= -->
+<section id="v-geraet">
+  <h2>Dieses Gerät</h2>
+  <div class="stack">
+    <div>
+      <label class="lb" for="gName">Name der Station</label>
+      <input id="gName" placeholder="z. B. Tor Nord, Schicht 1" autocomplete="off">
+    </div>
+    <div>
+      <label class="lb" for="gModus">Was bucht dieses Gerät?</label>
+      <select id="gModus">
+        <option value="auto">Kommen und Gehen im Wechsel</option>
+        <option value="kommen">Nur KOMMEN</option>
+        <option value="gehen">Nur GEHEN</option>
+      </select>
+    </div>
+    <button class="act primary" id="btnGeraet">Einstellung speichern</button>
+  </div>
+
+  <div class="warnbox">
+    Wenn Kommen und Gehen von zwei verschiedenen Leuten gescannt werden, muss jedes Gerät fest
+    auf <b>Nur KOMMEN</b> oder <b>Nur GEHEN</b> stehen. Nur so kann kein Gerät raten, ob jemand
+    gerade eintrifft oder Feierabend macht.
+  </div>
+
+  <h2>Buchungen weitergeben</h2>
+  <div class="row">
+    <button class="act primary" id="btnSendTag">Heutige Buchungen senden</button>
+  </div>
+  <div class="row">
+    <button class="act" id="btnSendAlle">Alle Buchungen senden</button>
+  </div>
+  <p class="note">Erzeugt eine kleine Datei, die du in die WhatsApp-Gruppe schicken kannst. Sie enthält nur Nummern und Uhrzeiten, keine Namen.</p>
+
+  <h2>Buchungen von anderen einlesen</h2>
+  <div class="row">
+    <button class="act primary" id="btnEinlesen">Datei einlesen</button>
+  </div>
+  <input type="file" id="fileEvents" accept="application/json" multiple hidden>
+  <p class="note">Mehrere Dateien auf einmal möglich. Doppelte Buchungen werden automatisch erkannt und nicht zweimal gezählt.</p>
+</section>
+
+<!-- ================= EXPORT ================= -->
 <section id="v-export">
-  <h2>Zeitraum</h2>
+  <h2>Excel-Liste</h2>
   <div class="grid2">
-    <div><label class="sub" for="dFrom" style="font-size:14px;color:var(--mute)">von</label><input type="date" id="dFrom"></div>
-    <div><label class="sub" for="dTo" style="font-size:14px;color:var(--mute)">bis</label><input type="date" id="dTo"></div>
+    <div><label class="lb" for="dFrom">von</label><input type="date" id="dFrom"></div>
+    <div><label class="lb" for="dTo">bis</label><input type="date" id="dTo"></div>
   </div>
   <div class="row"><button class="act primary" id="btnCsv">Excel-Datei herunterladen</button></div>
 
   <div class="warnbox">
-    § 17 MiLoG verlangt Beginn, Ende und Dauer der täglichen Arbeitszeit je Arbeitnehmer, aufgezeichnet spätestens 7 Tage danach und 2 Jahre aufbewahrt. Die Datei enthält genau diese Spalten. Sichere sie regelmäßig – die App speichert nur auf diesem Gerät.
+    § 17 MiLoG verlangt Beginn, Ende und Dauer der täglichen Arbeitszeit je Arbeitnehmer,
+    aufgezeichnet spätestens 7 Tage danach und 2 Jahre aufbewahrt. Vor dem Export prüfen,
+    ob alle Buchungen der anderen Station eingelesen sind.
   </div>
 
-  <h2>Offene Buchungen</h2>
+  <h2>Unvollständige Tage</h2>
   <div id="openList"></div>
 
-  <h2>Daten</h2>
+  <h2>Mitarbeiterliste</h2>
   <div class="row">
-    <button class="act" id="btnBackup2">Sicherung speichern</button>
-    <button class="act" id="btnRestore">Sicherung laden</button>
+    <button class="act" id="btnRestore">Liste ersetzen</button>
+    <button class="act" id="btnMerge">Liste ergänzen</button>
   </div>
   <input type="file" id="fileIn" accept="application/json" hidden>
-  <div class="row"><button class="act danger" id="btnWipe">Alle Buchungen löschen</button></div>
+  <input type="file" id="fileMerge" accept="application/json" hidden>
 
-  <p class="note" id="lizenzzeile" style="margin-top:26px">
+  <h2>Sicherung</h2>
+  <div class="row">
+    <button class="act" id="btnBackup">Komplette Sicherung speichern</button>
+  </div>
+  <div class="row">
+    <button class="act danger" id="btnWipe">Alle Buchungen löschen</button>
+  </div>
+
+  <p class="note" style="margin-top:26px">
     Zeiterfassung Baustelle · © 2026 Maxim Geier. Alle Rechte vorbehalten.
     Weitergabe oder Bearbeitung nur mit schriftlicher Zustimmung.
   </p>
@@ -261,23 +273,23 @@
   <div class="verb" id="fVerb"></div>
   <div class="who" id="fWho"></div>
   <div class="meta" id="fMeta"></div>
-  <div class="helm" id="fHelm" hidden></div>
+  <div class="nr" id="fNr" hidden></div>
 </div>
 
 <nav>
   <button data-v="scan" aria-current="true">Scannen</button>
   <button data-v="today">Heute</button>
   <button data-v="staff">Leute</button>
+  <button data-v="geraet">Gerät</button>
   <button data-v="export">Export</button>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>if(typeof jsQR==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"><\/scr'+'ipt>');}</script>
 <script>
-/* ---------------------------------------------------------
-   Speicher: nutzt window.storage falls vorhanden,
-   sonst localStorage des Browsers.
----------------------------------------------------------- */
+/* =========================================================
+   Speicher
+========================================================= */
 const Store = {
   async get(k){
     try{
@@ -293,75 +305,134 @@ const Store = {
   }
 };
 
-let staff = [];    // {id, name, firma}
-let entries = [];  // {eid, id, date, kommen, gehen}
+let staff  = [];   // {id, helm, name, firma, baustelle, aufgabe, schicht}
+let events = [];   // {eid, id, ts, typ:'kommen'|'gehen', g:Gerätename}
+let geraet = { name:'', modus:'auto' };
 
 const $ = s => document.querySelector(s);
 const pad = n => String(n).padStart(2,'0');
 const dayKey = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const hhmm = iso => { const d=new Date(iso); return pad(d.getHours())+':'+pad(d.getMinutes()); };
 const deDate = k => { const [y,m,d]=k.split('-'); return d+'.'+m+'.'+y; };
+const tagVon = iso => dayKey(new Date(iso));
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 async function load(){
-  staff   = (await Store.get('zeit:staff'))   || [];
-  entries = (await Store.get('zeit:entries')) || [];
+  staff  = (await Store.get('zeit:staff'))  || [];
+  events = (await Store.get('zeit:events')) || [];
+
+  // Übernahme aus der alten Fassung
+  const alt = await Store.get('zeit:entries');
+  if(alt && alt.length && !events.length){
+    alt.forEach(e=>{
+      events.push({eid:neueId(), id:e.id, ts:e.kommen, typ:'kommen', g:'alt'});
+      if(e.gehen) events.push({eid:neueId(), id:e.id, ts:e.gehen, typ:'gehen', g:'alt'});
+    });
+    saveEvents();
+  }
+
+  const g = await Store.get('zeit:geraet');
+  if(g) geraet = g;
+  $('#gName').value  = geraet.name || '';
+  $('#gModus').value = geraet.modus || 'auto';
+  zeigeRolle();
   renderAll();
 }
-const saveStaff   = () => Store.set('zeit:staff', staff);
-const saveEntries = () => Store.set('zeit:entries', entries);
+const saveStaff  = () => Store.set('zeit:staff', staff);
+const saveEvents = () => Store.set('zeit:events', events);
+const saveGeraet = () => Store.set('zeit:geraet', geraet);
+const neueId = () => 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 
-/* ---------------- Navigation ---------------- */
+/* =========================================================
+   Navigation
+========================================================= */
 document.querySelectorAll('nav button').forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-current','false'));
     b.setAttribute('aria-current','true');
     document.querySelectorAll('section').forEach(s=>s.classList.remove('on'));
-    $('#v-'+b.dataset.v).classList.add('on');
+    $('#v'+'-'+b.dataset.v).classList.add('on');
     if(b.dataset.v!=='scan') stopCam();
   };
 });
 
-/* ---------------- Buchen ---------------- */
-function findStaff(id){ return staff.find(s=>s.id.toUpperCase()===id.toUpperCase()); }
-function helmNr(p, id){ return (p && p.helm) ? p.helm : id; }
+/* =========================================================
+   Gerät
+========================================================= */
+function zeigeRolle(){
+  const r = $('#rolleAnzeige');
+  const m = geraet.modus;
+  r.className = 'rolle' + (m==='kommen' ? ' kommen' : m==='gehen' ? ' gehen' : '');
+  r.textContent = m==='kommen' ? 'nur KOMMEN' : m==='gehen' ? 'nur GEHEN' : 'Wechsel';
+  $('#modusHinweis').textContent =
+    m==='kommen' ? 'Dieses Gerät bucht ausschließlich KOMMEN. Wer zweimal gescannt wird, wird nur einmal gezählt.'
+  : m==='gehen'  ? 'Dieses Gerät bucht ausschließlich GEHEN. Wer zweimal gescannt wird, wird nur einmal gezählt.'
+  : 'Ein Scan bucht abwechselnd Kommen und Gehen. Das passt nur, wenn dasselbe Gerät beides erfasst.';
+}
+$('#btnGeraet').onclick = ()=>{
+  geraet = { name: $('#gName').value.trim(), modus: $('#gModus').value };
+  saveGeraet(); zeigeRolle();
+  alert('Gespeichert. Dieses Gerät bucht: ' +
+    (geraet.modus==='kommen'?'nur KOMMEN':geraet.modus==='gehen'?'nur GEHEN':'Kommen und Gehen im Wechsel'));
+};
+
+/* =========================================================
+   Buchen
+========================================================= */
+function findStaff(id){ return staff.find(s=>String(s.id).toUpperCase()===String(id).toUpperCase()); }
+
+function letztesEreignis(id, tag){
+  return events.filter(e=>e.id===id && tagVon(e.ts)===tag)
+               .sort((a,b)=> new Date(a.ts)-new Date(b.ts)).pop();
+}
 
 function book(rawId){
   const id = String(rawId).trim().toUpperCase();
   if(!id) return;
   const person = findStaff(id);
-  const now = new Date();
+  const jetzt = new Date();
+  const tag = dayKey(jetzt);
+  const letzt = letztesEreignis(id, tag);
 
-  const open = entries.find(e=>e.id===id && !e.gehen);
-  if(open){
-    open.gehen = now.toISOString();
-    saveEntries();
-    const mins = Math.round((now - new Date(open.kommen))/60000);
-    flash('gehen','Gehen', person?person.name:id,
-          pad(Math.floor(mins/60))+':'+pad(mins%60)+' h auf der Baustelle', helmNr(person,id));
-  }else{
-    entries.push({eid:'e'+Date.now()+Math.random().toString(16).slice(2,6),
-                  id, date:dayKey(now), kommen:now.toISOString(), gehen:null});
-    saveEntries();
-    flash('kommen','Kommen', person?person.name:id,
-          person? (person.firma||'') : 'Achtung: ID nicht angelegt', helmNr(person,id));
+  let typ;
+  if(geraet.modus === 'kommen') typ = 'kommen';
+  else if(geraet.modus === 'gehen') typ = 'gehen';
+  else typ = (letzt && letzt.typ === 'kommen') ? 'gehen' : 'kommen';
+
+  // Doppelscan innerhalb von 10 Minuten wird nicht noch einmal gebucht
+  if(letzt && letzt.typ === typ && (jetzt - new Date(letzt.ts)) < 10*60*1000){
+    flash('warn', 'Schon erfasst', person?person.name:id,
+          typ.toUpperCase() + ' um ' + hhmm(letzt.ts), id);
+    return;
   }
+
+  events.push({eid:neueId(), id, ts:jetzt.toISOString(), typ, g:geraet.name||'Gerät'});
+  saveEvents();
+
+  let meta = person ? (person.firma||'') : 'Achtung: Nummer nicht angelegt';
+  if(typ === 'gehen' && letzt && letzt.typ === 'kommen'){
+    const min = Math.round((jetzt - new Date(letzt.ts))/60000);
+    meta = pad(Math.floor(min/60))+':'+pad(min%60)+' h auf der Baustelle';
+  }
+  if(typ === 'gehen' && !letzt) meta = 'Achtung: kein Kommen erfasst';
+
+  flash(typ, typ==='kommen'?'Kommen':'Gehen', person?person.name:id, meta, id);
   renderAll();
 }
 
 let flashT;
-function flash(kind, verb, who, meta, helm){
+function flash(kind, verb, who, meta, nr){
   const f = $('#flash');
-  f.className = 'on '+kind;
+  f.className = 'on ' + kind;
   $('#fVerb').textContent = verb;
   $('#fWho').textContent  = who;
   $('#fMeta').textContent = meta || '';
-  const fh = $('#fHelm');
-  if(helm){ fh.innerHTML = '<small>HELM</small>' + esc(helm); fh.hidden = false; }
-  else { fh.hidden = true; }
-  beep(kind==='fehler'?200:660);
-  if(navigator.vibrate) navigator.vibrate(kind==='fehler'?[90,70,90]:70);
+  const fn = $('#fNr');
+  if(nr){ fn.innerHTML = '<small>NR.</small>' + esc(nr); fn.hidden = false; } else fn.hidden = true;
+  beep(kind==='kommen'?760:kind==='gehen'?520:240);
+  if(navigator.vibrate) navigator.vibrate(kind==='warn'?[80,60,80]:70);
   clearTimeout(flashT);
-  flashT = setTimeout(()=>{ f.className=''; }, 1800);
+  flashT = setTimeout(()=>{ f.className=''; }, 1900);
 }
 function beep(freq){
   try{
@@ -377,10 +448,13 @@ function beep(freq){
 $('#btnManual').onclick = ()=>{ book($('#manualId').value); $('#manualId').value=''; };
 $('#manualId').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnManual').click(); });
 
-/* ---------------- Kamera / QR ---------------- */
+/* =========================================================
+   Kamera
+========================================================= */
 let stream=null, raf=null, lastCode='', lastAt=0, track=null, detector=null, busy=false;
+const video = $('#video'), canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d', {willReadFrequently:true});
 
-// Viele Handys können QR-Codes selbst lesen. Das ist schneller und braucht keine Bibliothek.
 (async ()=>{
   const st = $('#scanStatus');
   try{
@@ -388,31 +462,26 @@ let stream=null, raf=null, lastCode='', lastAt=0, track=null, detector=null, bus
       const f = await BarcodeDetector.getSupportedFormats();
       if(f.includes('qr_code')){
         detector = new BarcodeDetector({formats:['qr_code']});
-        st.textContent = 'Scanner bereit (Erkennung vom Handy).';
-        return;
+        st.textContent = 'Scanner bereit (Erkennung vom Handy).'; return;
       }
     }
   }catch(e){}
-  st.textContent = (typeof jsQR!=='undefined')
-    ? 'Scanner bereit.'
-    : 'Der Scanner konnte nicht geladen werden. Prüfe die Internetverbindung und lade die Seite neu. Solange kannst du die Nummer unten eintippen.';
+  st.textContent = (typeof jsQR!=='undefined') ? 'Scanner bereit.'
+    : 'Der Scanner konnte nicht geladen werden. Internetverbindung prüfen und Seite neu laden. Solange die Nummer unten eintippen.';
 })();
-const video = $('#video'), canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d', {willReadFrequently:true});
 
 async function startCam(){
   try{
     stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
     video.srcObject = stream; await video.play();
     track = stream.getVideoTracks()[0];
-    $('#camHint').hidden = true;
-    $('#reticle').hidden = false;
+    $('#camHint').hidden = true; $('#reticle').hidden = false;
     $('#btnCam').textContent = 'Kamera stoppen';
     if(track.getCapabilities && track.getCapabilities().torch) $('#btnTorch').hidden = false;
     tick();
   }catch(e){
     $('#camHint').textContent = 'Kamera nicht erreichbar: '+e.message+
-      ' — die Kamera funktioniert nur, wenn die Seite über HTTPS geöffnet wird. Solange kannst du die ID unten eintippen.';
+      ' — die Kamera funktioniert nur über HTTPS. Solange die Nummer unten eintippen.';
   }
 }
 function stopCam(){
@@ -423,162 +492,248 @@ function stopCam(){
 }
 $('#btnCam').onclick = ()=> stream ? stopCam() : startCam();
 $('#btnTorch').onclick = async ()=>{
-  const on = $('#btnTorch').textContent.includes('an');
-  try{ await track.applyConstraints({advanced:[{torch:on}]});
-       $('#btnTorch').textContent = on ? 'Licht aus' : 'Licht an'; }catch(e){}
+  const an = $('#btnTorch').textContent.includes('an');
+  try{ await track.applyConstraints({advanced:[{torch:an}]});
+       $('#btnTorch').textContent = an ? 'Licht aus' : 'Licht an'; }catch(e){}
 };
-
 function gotCode(text){
   if(!text) return;
   const now = Date.now();
-  // gleicher Code zählt erst nach 4 Sekunden wieder – verhindert Doppelbuchung
-  if(text !== lastCode || now - lastAt > 4000){
-    lastCode = text; lastAt = now;
-    book(text);
-  }
+  if(text !== lastCode || now - lastAt > 4000){ lastCode = text; lastAt = now; book(text); }
 }
-
 async function tick(){
   if(video.readyState === video.HAVE_ENOUGH_DATA && !busy){
     if(detector){
       busy = true;
-      try{
-        const hits = await detector.detect(video);
-        if(hits && hits.length) gotCode(hits[0].rawValue);
-      }catch(e){}
+      try{ const h = await detector.detect(video); if(h && h.length) gotCode(h[0].rawValue); }catch(e){}
       busy = false;
     }else if(typeof jsQR !== 'undefined'){
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
       ctx.drawImage(video,0,0,canvas.width,canvas.height);
       const img = ctx.getImageData(0,0,canvas.width,canvas.height);
-      let code = jsQR(img.data, img.width, img.height, {inversionAttempts:'attemptBoth'});
+      const code = jsQR(img.data, img.width, img.height, {inversionAttempts:'attemptBoth'});
       if(code && code.data) gotCode(code.data);
     }
   }
   raf = requestAnimationFrame(tick);
 }
 
-/* ---------------- Rendern ---------------- */
+/* =========================================================
+   Paare bilden: aus Ereignissen werden Schichten
+========================================================= */
+function paareFuerTag(tag){
+  const proPerson = {};
+  events.filter(e=>tagVon(e.ts)===tag).forEach(e=>{
+    (proPerson[e.id] = proPerson[e.id] || []).push(e);
+  });
+  const out = [];
+  Object.keys(proPerson).forEach(id=>{
+    const liste = proPerson[id].sort((a,b)=> new Date(a.ts)-new Date(b.ts));
+    let offen = null;
+    liste.forEach(e=>{
+      if(e.typ === 'kommen'){
+        if(offen) out.push({id, kommen:offen.ts, gehen:null});
+        offen = e;
+      }else{
+        if(offen){ out.push({id, kommen:offen.ts, gehen:e.ts}); offen = null; }
+        else out.push({id, kommen:null, gehen:e.ts});
+      }
+    });
+    if(offen) out.push({id, kommen:offen.ts, gehen:null});
+  });
+  return out.sort((a,b)=> new Date(a.kommen||a.gehen) - new Date(b.kommen||b.gehen));
+}
+function alleTage(){
+  return [...new Set(events.map(e=>tagVon(e.ts)))].sort();
+}
+
+/* =========================================================
+   Rendern
+========================================================= */
 function renderAll(){ renderToday(); renderStaff(); renderOpen(); }
 
 function renderToday(){
-  const today = dayKey(new Date());
-  const rows = entries.filter(e=>e.date===today)
-    .sort((a,b)=> (a.gehen?1:0)-(b.gehen?1:0) || new Date(b.kommen)-new Date(a.kommen));
-  $('#cNow').textContent = rows.filter(r=>!r.gehen).length;
-  $('#cDay').textContent = new Set(rows.map(r=>r.id)).size;
+  const tag = $('#tagWahl').value || dayKey(new Date());
+  const paare = paareFuerTag(tag);
+  $('#cNow').textContent    = paare.filter(p=>p.kommen && !p.gehen).length;
+  $('#cKommen').textContent = events.filter(e=>tagVon(e.ts)===tag && e.typ==='kommen').length;
+  $('#cGehen').textContent  = events.filter(e=>tagVon(e.ts)===tag && e.typ==='gehen').length;
 
   const box = $('#todayList');
-  if(!rows.length){ box.innerHTML = '<p class="empty">Heute wurde noch nichts gebucht. Der erste Scan erscheint hier.</p>'; return; }
-  box.innerHTML = rows.map(r=>{
+  if(!paare.length){ box.innerHTML = '<p class="empty">Für diesen Tag liegen keine Buchungen vor.</p>'; return; }
+  box.innerHTML = paare.map(r=>{
     const p = findStaff(r.id);
-    const dauer = r.gehen ? Math.round((new Date(r.gehen)-new Date(r.kommen))/60000) : null;
-    return `<div class="card ${r.gehen?'':'on-site'}">
+    const luecke = !r.kommen;
+    const offen  = r.kommen && !r.gehen;
+    const min = (r.kommen && r.gehen) ? Math.round((new Date(r.gehen)-new Date(r.kommen))/60000) : null;
+    return `<div class="card ${offen?'on-site':''}${luecke?' luecke':''}">
       <span class="dot"></span>
       <div class="body">
         <div class="nm">${esc(p?p.name:r.id)}</div>
-        <div class="sub mono">Helm ${esc(helmNr(p,r.id))}${p&&p.firma?' · '+esc(p.firma):''}</div>
+        <div class="sub mono">Nr. ${esc(r.id)}${p&&p.helm?' · Helm '+esc(p.helm):''}${p&&p.firma?' · '+esc(p.firma):''}</div>
       </div>
       <div class="tm">
-        <b>${hhmm(r.kommen)}${r.gehen?' – '+hhmm(r.gehen):''}</b>
-        <span class="sub">${r.gehen ? pad(Math.floor(dauer/60))+':'+pad(dauer%60)+' h' : 'auf der Baustelle'}</span>
+        <b>${r.kommen?hhmm(r.kommen):'—'} – ${r.gehen?hhmm(r.gehen):'—'}</b>
+        <span class="sub">${min!==null ? pad(Math.floor(min/60))+':'+pad(min%60)+' h'
+                          : luecke ? 'kein Kommen' : 'auf der Baustelle'}</span>
       </div>
     </div>`;
   }).join('');
 }
+$('#tagWahl').onchange = renderToday;
 
 function renderStaff(){
+  const q = ($('#suche').value||'').toLowerCase().trim();
+  const liste = staff.slice().sort((a,b)=>String(a.id).localeCompare(String(b.id)))
+    .filter(s=> !q || [s.id,s.name,s.firma,s.helm].join(' ').toLowerCase().includes(q));
+  $('#staffCount').textContent = staff.length;
   const box = $('#staffList');
-  if(!staff.length){ box.innerHTML = '<p class="empty">Noch keine Mitarbeiter angelegt. Oben ID, Name und Firma eintragen.</p>'; return; }
-  box.innerHTML = staff.slice().sort((a,b)=>a.id.localeCompare(b.id)).map(s=>
+  if(!liste.length){ box.innerHTML = '<p class="empty">Nichts gefunden.</p>'; return; }
+  box.innerHTML = liste.slice(0,300).map(s=>
     `<div class="card">
       <div class="body">
         <div class="nm">${esc(s.name)}</div>
-        <div class="sub mono">Helm ${esc(s.helm||s.id)} · ID ${esc(s.id)}${s.firma?' · '+esc(s.firma):''}${s.schicht?' · '+esc(s.schicht):''}</div>
+        <div class="sub mono">Nr. ${esc(s.id)}${s.helm?' · Helm '+esc(s.helm):''}${s.firma?' · '+esc(s.firma):''}</div>
       </div>
-      <button class="act danger" style="flex:0 0 auto;padding:9px 13px;font-size:15px" onclick="delStaff('${esc(s.id)}')">Löschen</button>
-    </div>`).join('');
+      <button class="act danger" style="flex:0 0 auto;padding:9px 13px;font-size:15px"
+        onclick="delStaff('${esc(s.id)}')">Löschen</button>
+    </div>`).join('') + (liste.length>300 ? '<p class="empty">… weitere über die Suche</p>' : '');
 }
-window.delStaff = id => {
-  if(!confirm('Mitarbeiter '+id+' aus der Liste entfernen? Bereits erfasste Zeiten bleiben erhalten.')) return;
-  staff = staff.filter(s=>s.id!==id); saveStaff(); renderStaff();
-};
+$('#suche').oninput = renderStaff;
 
+window.delStaff = id => {
+  if(!confirm('Mitarbeiter Nr. '+id+' entfernen? Erfasste Zeiten bleiben erhalten.')) return;
+  staff = staff.filter(s=>String(s.id)!==String(id)); saveStaff(); renderStaff();
+};
 $('#btnAdd').onclick = ()=>{
-  const id = $('#nId').value.trim().toUpperCase();
-  const name = $('#nName').value.trim();
-  if(!id || !name){ alert('ID und Name werden beide gebraucht.'); return; }
-  if(findStaff(id)){ alert('Die ID '+id+' ist schon vergeben.'); return; }
-  staff.push({id, name, firma:$('#nFirma').value.trim(), schicht:$('#nSchicht').value,
-              helm:($('#nHelm').value.trim() || id)});
+  const id = $('#nId').value.trim(), name = $('#nName').value.trim();
+  if(!id || !name){ alert('Nummer und Name werden beide gebraucht.'); return; }
+  if(findStaff(id)){ alert('Die Nummer '+id+' ist schon vergeben.'); return; }
+  staff.push({id, name, helm:$('#nHelm').value.trim(), firma:$('#nFirma').value.trim(),
+              schicht:$('#nSchicht').value, baustelle:'', aufgabe:''});
   saveStaff();
-  $('#nId').value=''; $('#nName').value=''; $('#nFirma').value=''; $('#nHelm').value='';
+  ['#nId','#nName','#nHelm','#nFirma'].forEach(s=>$(s).value='');
   renderStaff();
 };
 
 function renderOpen(){
-  const today = dayKey(new Date());
-  const open = entries.filter(e=>!e.gehen && e.date!==today);
+  const heute = dayKey(new Date());
+  const probleme = [];
+  alleTage().filter(t=>t!==heute).forEach(t=>{
+    paareFuerTag(t).forEach(r=>{ if(!r.kommen || !r.gehen) probleme.push({tag:t, ...r}); });
+  });
   const box = $('#openList');
-  if(!open.length){ box.innerHTML = '<p class="empty">Keine Buchung aus früheren Tagen offen.</p>'; return; }
-  box.innerHTML = open.map(r=>{
+  if(!probleme.length){ box.innerHTML = '<div class="okbox">Alle abgeschlossenen Tage sind vollständig.</div>'; return; }
+  box.innerHTML = probleme.map(r=>{
     const p = findStaff(r.id);
-    return `<div class="card">
+    return `<div class="card luecke">
+      <span class="dot"></span>
       <div class="body">
         <div class="nm">${esc(p?p.name:r.id)}</div>
-        <div class="sub">Helm ${esc(helmNr(p,r.id))} · ${deDate(r.date)}, Kommen ${hhmm(r.kommen)} – kein Gehen erfasst</div>
+        <div class="sub">${deDate(r.tag)} · ${r.kommen ? 'Kommen '+hhmm(r.kommen)+', kein Gehen' : 'Gehen '+hhmm(r.gehen)+', kein Kommen'}</div>
       </div>
-      <button class="act" style="flex:0 0 auto;padding:9px 13px;font-size:15px" onclick="fixEntry('${r.eid}')">Zeit nachtragen</button>
+      <button class="act" style="flex:0 0 auto;padding:9px 13px;font-size:15px"
+        onclick="nachtragen('${r.tag}','${r.id}','${r.kommen?'gehen':'kommen'}')">Nachtragen</button>
     </div>`;
   }).join('');
 }
-window.fixEntry = eid => {
-  const e = entries.find(x=>x.eid===eid); if(!e) return;
-  const t = prompt('Uhrzeit für Gehen am '+deDate(e.date)+' (Format 16:30):','16:30');
+window.nachtragen = (tag, id, typ)=>{
+  const t = prompt('Uhrzeit für ' + typ.toUpperCase() + ' am ' + deDate(tag) + ' (Format 16:30):',
+                   typ==='gehen' ? '16:30' : '07:00');
   if(!t || !/^\d{1,2}:\d{2}$/.test(t)) return;
   const [h,m] = t.split(':').map(Number);
-  const d = new Date(e.date+'T00:00:00'); d.setHours(h,m,0,0);
-  e.gehen = d.toISOString(); saveEntries(); renderAll();
+  const d = new Date(tag+'T00:00:00'); d.setHours(h,m,0,0);
+  events.push({eid:neueId(), id, ts:d.toISOString(), typ, g:'nachgetragen'});
+  saveEvents(); renderAll();
 };
 
-/* ---------------- Export ---------------- */
-function csvEsc(v){ v = v==null?'':String(v); return /[";\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
-
-$('#btnCsv').onclick = ()=>{
-  const from = $('#dFrom').value || '0000-01-01';
-  const to   = $('#dTo').value   || '9999-12-31';
-  const rows = entries.filter(e=>e.date>=from && e.date<=to)
-                      .sort((a,b)=> a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
-  if(!rows.length){ alert('Für diesen Zeitraum gibt es keine Buchungen.'); return; }
-
-  const head = ['Datum','Helm-Nr.','Mitarbeiter-ID','Name','Firma','Schicht','Kommen','Gehen','Dauer (h:mm)','Dauer (Std. dezimal)','Bemerkung'];
-  const lines = [head.join(';')];
-  rows.forEach(r=>{
-    const p = findStaff(r.id);
-    let hm='', dez='', bem='';
-    if(r.gehen){
-      const mins = Math.round((new Date(r.gehen)-new Date(r.kommen))/60000);
-      hm = Math.floor(mins/60)+':'+pad(mins%60);
-      dez = (mins/60).toFixed(2).replace('.',',');
-    }else{ bem = 'Gehen fehlt'; }
-    if(!p) bem = (bem?bem+'; ':'')+'ID nicht in Mitarbeiterliste';
-    lines.push([deDate(r.date), helmNr(p,r.id), r.id, p?p.name:'', p?p.firma:'', p?(p.schicht||''):'',
-                hhmm(r.kommen), r.gehen?hhmm(r.gehen):'', hm, dez, bem].map(csvEsc).join(';'));
-  });
-  dl('\uFEFF'+lines.join('\r\n'), 'Zeiterfassung_'+from+'_bis_'+to+'.csv', 'text/csv;charset=utf-8');
-};
-
+/* =========================================================
+   Buchungen weitergeben und einlesen
+========================================================= */
 function dl(text, name, mime){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text],{type:mime}));
   a.download = name; a.click(); URL.revokeObjectURL(a.href);
 }
+function sende(liste, titel){
+  if(!liste.length){ alert('Für diesen Zeitraum gibt es keine Buchungen.'); return; }
+  const paket = { art:'buchungen', geraet:geraet.name||'Gerät', modus:geraet.modus,
+                  erstellt:new Date().toISOString(), events:liste };
+  const kurz = (geraet.name||'geraet').replace(/[^\wäöüÄÖÜß-]+/g,'-');
+  dl(JSON.stringify(paket), 'Buchungen_'+kurz+'_'+titel+'.json', 'application/json');
+}
+$('#btnSendTag').onclick = ()=>{
+  const t = dayKey(new Date());
+  sende(events.filter(e=>tagVon(e.ts)===t), t);
+};
+$('#btnSendAlle').onclick = ()=> sende(events, 'alle');
 
-const backup = ()=> dl(JSON.stringify({staff,entries},null,1),
-                       'Sicherung_Zeiterfassung_'+dayKey(new Date())+'.json','application/json');
-$('#btnBackup').onclick = backup;
-$('#btnBackup2').onclick = backup;
+$('#btnEinlesen').onclick = ()=> $('#fileEvents').click();
+$('#fileEvents').onchange = async e=>{
+  const dateien = [...e.target.files];
+  let neu = 0, doppelt = 0, fehler = 0;
+  const bekannt = new Set(events.map(x=>x.eid));
+  const signatur = new Set(events.map(x=>x.id+'|'+x.ts+'|'+x.typ));
+  for(const f of dateien){
+    try{
+      const txt = await f.text();
+      const d = JSON.parse(txt);
+      const liste = Array.isArray(d.events) ? d.events : null;
+      if(!liste) throw new Error('keine Buchungen enthalten');
+      liste.forEach(ev=>{
+        if(!ev || !ev.id || !ev.ts || !ev.typ) return;
+        const sig = ev.id+'|'+ev.ts+'|'+ev.typ;
+        if(bekannt.has(ev.eid) || signatur.has(sig)){ doppelt++; return; }
+        bekannt.add(ev.eid); signatur.add(sig);
+        events.push(ev); neu++;
+      });
+    }catch(err){ fehler++; }
+  }
+  saveEvents(); renderAll();
+  alert(neu + ' Buchungen übernommen.' +
+        (doppelt ? '\n' + doppelt + ' waren schon vorhanden.' : '') +
+        (fehler  ? '\n' + fehler + ' Datei(en) konnten nicht gelesen werden.' : ''));
+  e.target.value = '';
+};
 
+/* =========================================================
+   Excel-Export
+========================================================= */
+function csvEsc(v){ v = v==null?'':String(v); return /[";\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+
+$('#btnCsv').onclick = ()=>{
+  const von = $('#dFrom').value || '0000-01-01';
+  const bis = $('#dTo').value   || '9999-12-31';
+  const tage = alleTage().filter(t=>t>=von && t<=bis);
+  const zeilen = [['Datum','Nr.','Helm-Nr.','Name','Firma','Baustelle','Aufgabe','Schicht',
+                   'Kommen','Gehen','Dauer (h:mm)','Dauer (Std. dezimal)','Bemerkung'].join(';')];
+  let n = 0;
+  tage.forEach(t=>{
+    paareFuerTag(t).forEach(r=>{
+      const p = findStaff(r.id);
+      let hm='', dez='', bem=[];
+      if(r.kommen && r.gehen){
+        const min = Math.round((new Date(r.gehen)-new Date(r.kommen))/60000);
+        hm = Math.floor(min/60)+':'+pad(min%60);
+        dez = (min/60).toFixed(2).replace('.',',');
+      }
+      if(!r.kommen) bem.push('Kommen fehlt');
+      if(!r.gehen)  bem.push('Gehen fehlt');
+      if(!p) bem.push('Nummer nicht in Mitarbeiterliste');
+      zeilen.push([deDate(t), r.id, p?(p.helm||''):'', p?p.name:'', p?p.firma:'',
+                   p?(p.baustelle||''):'', p?(p.aufgabe||''):'', p?(p.schicht||''):'',
+                   r.kommen?hhmm(r.kommen):'', r.gehen?hhmm(r.gehen):'',
+                   hm, dez, bem.join('; ')].map(csvEsc).join(';'));
+      n++;
+    });
+  });
+  if(!n){ alert('Für diesen Zeitraum gibt es keine Buchungen.'); return; }
+  dl('\uFEFF'+zeilen.join('\r\n'), 'Zeiterfassung_'+von+'_bis_'+bis+'.csv', 'text/csv;charset=utf-8');
+};
+
+/* =========================================================
+   Mitarbeiterliste und Sicherung
+========================================================= */
 $('#btnRestore').onclick = ()=> $('#fileIn').click();
 $('#fileIn').onchange = e=>{
   const f = e.target.files[0]; if(!f) return;
@@ -586,28 +741,60 @@ $('#fileIn').onchange = e=>{
   r.onload = ()=>{
     try{
       const d = JSON.parse(r.result);
-      if(!Array.isArray(d.staff)||!Array.isArray(d.entries)) throw new Error('falscher Aufbau');
-      if(!confirm('Sicherung laden? Die aktuellen Daten auf diesem Gerät werden ersetzt.')) return;
-      staff=d.staff; entries=d.entries; saveStaff(); saveEntries(); renderAll();
-      alert('Sicherung geladen: '+staff.length+' Mitarbeiter, '+entries.length+' Buchungen.');
-    }catch(err){ alert('Datei konnte nicht gelesen werden: '+err.message); }
+      if(!Array.isArray(d.staff)) throw new Error('falscher Aufbau');
+      if(!confirm('Mitarbeiterliste ersetzen? Die vorhandenen ' + staff.length + ' Einträge werden überschrieben. Buchungen bleiben erhalten.')) return;
+      staff = d.staff; saveStaff();
+      if(Array.isArray(d.events) && d.events.length &&
+         confirm('Die Datei enthält außerdem ' + d.events.length + ' Buchungen. Auch übernehmen?')){
+        d.events.forEach(ev=>events.push(ev)); saveEvents();
+      }
+      renderAll();
+      alert('Geladen: ' + staff.length + ' Mitarbeiter.');
+    }catch(err){ alert('Datei konnte nicht gelesen werden: ' + err.message); }
+    e.target.value='';
   };
   r.readAsText(f);
 };
 
+$('#btnMerge').onclick = ()=> $('#fileMerge').click();
+$('#fileMerge').onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const d = JSON.parse(r.result);
+      if(!Array.isArray(d.staff)) throw new Error('falscher Aufbau');
+      let neu=0, schon=0;
+      d.staff.forEach(p=>{
+        if(!p || !p.id) return;
+        if(findStaff(p.id)){ schon++; return; }
+        staff.push(p); neu++;
+      });
+      saveStaff(); renderAll();
+      alert(neu + ' neue Mitarbeiter ergänzt.' + (schon ? '\n' + schon + ' waren schon vorhanden.' : ''));
+    }catch(err){ alert('Datei konnte nicht gelesen werden: ' + err.message); }
+    e.target.value='';
+  };
+  r.readAsText(f);
+};
+
+$('#btnBackup').onclick = ()=>
+  dl(JSON.stringify({staff, events, geraet}, null, 1),
+     'Sicherung_Zeiterfassung_'+dayKey(new Date())+'.json', 'application/json');
+
 $('#btnWipe').onclick = ()=>{
   if(!confirm('Alle Buchungen löschen? Vorher eine Sicherung speichern.')) return;
   if(!confirm('Wirklich? Das lässt sich nicht rückgängig machen.')) return;
-  entries=[]; saveEntries(); renderAll();
+  events = []; saveEvents(); renderAll();
 };
 
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>
-  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-/* ---------------- Start ---------------- */
-const t = new Date();
-$('#dTo').value = dayKey(t);
-$('#dFrom').value = dayKey(new Date(t.getFullYear(), t.getMonth(), 1));
+/* =========================================================
+   Start
+========================================================= */
+const heute = new Date();
+$('#tagWahl').value = dayKey(heute);
+$('#dTo').value   = dayKey(heute);
+$('#dFrom').value = dayKey(new Date(heute.getFullYear(), heute.getMonth(), 1));
 load();
 </script>
 </body>

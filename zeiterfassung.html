@@ -12878,7 +12878,7 @@ const Store = {
 /* Fest hinterlegte Personalnummern. Namen stehen NICHT in der App,
    sondern nur in der Mitarbeiterliste der Bauleitung.
    Neue Nummern = neue App-Version. */
-const APP_STAND = '03.10.2026 (2)';
+const APP_STAND = '04.10.2026';
 const NUMMERN_BEREICHE = ['001-177'];
 const NUMMERN = NUMMERN_BEREICHE.flatMap(r=>{
   const [a,b] = r.split('-'); const von=+a, bis=+(b||a); const out=[];
@@ -13996,6 +13996,8 @@ $('#dTo').value   = dayKey(heute);
 $('#dFrom').value = dayKey(new Date(heute.getFullYear(), heute.getMonth(), 1));
 $('#stand').textContent = APP_STAND;
 load();
+// Offline: Seite auf dem Gerät zwischenspeichern
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw-zeiterfassung.js').catch(()=>{});
 </script>
 </body>
 </html>
